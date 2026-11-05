@@ -29,6 +29,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "store"))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "lora-receiver"))  # frame_codec, curve_codec
+import bus  # noqa: E402
 import db  # noqa: E402
 
 # Décodeur courbe v0x05 (module pur, même dossier — testable hors device).
@@ -510,6 +511,7 @@ def on_recv_boot(decoded, rssi, snr, pdl_index, sender_addr) -> None:
                 labels["IINST"] = frame_codec.interpret_tlv(frame_codec.T_IINST, iinst_raw)
             try:
                 db.record_measurement(measurements_db, pdl_index, labels)
+                bus.publish_stored(_mqtt, pdl_index, int(time.time()))
                 log.info(f"PAPP boot={papp} VA IINST={labels.get('IINST')} (src_standard={src_std}) "
                          f"pdl_index={pdl_index} → measurement instantané (unboxing)")
             except Exception as e:
@@ -652,6 +654,7 @@ def on_recv_curve(decoded, rssi, snr, pdl_index, now, time_since_prev) -> None:
                 rows.append((pdl_index, labels, ts_list[i]))
             n_ins = db.record_measurements_batch(measurements_db, rows)
             db.record_lora_link(measurements_db, pdl_index, rssi, snr)
+            bus.publish_stored(_mqtt, pdl_index, ts_list[-1] if ts_list else None)
             log.debug(f"store: v0x05 [{mode}] batch {n_ins} mesures + 1 lora_link")
         except Exception as e:
             log.warning(f"store: écriture v0x05 échouée: {e}")

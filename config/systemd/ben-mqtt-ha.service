@@ -1,0 +1,24 @@
+[Unit]
+Description=BEN MQTT → Home Assistant (push + discovery, opt-in)
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+# OPT-IN : sans fichier de config, l'unité est SAUTÉE (pas en échec) — un boîtier qui
+# n'a pas de Home Assistant ne voit aucune différence. Activer :
+#   écrire /etc/ben-firmware/mqtt-ha.json puis `sudo systemctl restart ben-mqtt-ha`.
+# Désactiver : supprimer le fichier puis `sudo systemctl stop ben-mqtt-ha`.
+ConditionPathExists=/etc/ben-firmware/mqtt-ha.json
+
+[Service]
+Type=simple
+User=ben
+WorkingDirectory=/opt/ben/repo/src/pi/ben-mqtt-ha
+# Sans ça, rien ne sort sous systemd (cf. ben-local-api.service).
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /opt/ben/repo/src/pi/ben-mqtt-ha/ben_mqtt_ha.py
+Restart=always
+RestartSec=10
+
+# ⓘ Contrairement aux lecteurs, PAS démarré par ben-network-check : il ne touche ni la
+#   radio ni les GPIO, et un broker injoignable n'est pas une panne — paho se reconnecte.
+[Install]
+WantedBy=multi-user.target

@@ -7,8 +7,9 @@ info:
     API HTTP **locale, lecture seule** exposée par chaque boîtier BEN sur le LAN
     (`src/pi/store/local_api.py`). Sert la consommation stockée par les readers TIC/LoRa
     dans `measurements.db`. Consommée aujourd'hui par l'app Flutter ; contrat visé aussi
-    pour une intégration Home Assistant / Node-RED et pour le cloud (qui servira le MÊME
-    `/consumption`).
+    pour Node-RED et pour le cloud (qui servira le MÊME `/consumption`). Pour Home
+    Assistant, préférer le push MQTT (`ben-mqtt-ha`, cf. docs/home-assistant.md), qui
+    publie la MÊME forme que `/live` et `/registers`.
 
     **Découverte** : l'app récupère l'IP du boîtier au provisioning (statut `connected:<ip>`)
     puis tape le port 8087.

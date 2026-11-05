@@ -330,6 +330,10 @@ systemctl start  wifi-watchdog.timer || true
 systemctl enable ben-level-profiler.timer
 systemctl start  ben-level-profiler.timer || true
 
+# Pont MQTT → Home Assistant : activé PARTOUT, mais inerte tant que
+# /etc/ben-firmware/mqtt-ha.json n'existe pas (ConditionPathExists → unité sautée).
+systemctl enable ben-mqtt-ha.service
+
 # Les agents de mesure (voir capabilities.CAP_SERVICES) ne sont PAS enable :
 # pas de WantedBy → pas d'autostart au boot. C'est ben-network-check.service
 # (check_network.py) qui les démarre, et seulement si le réseau est up. Sinon

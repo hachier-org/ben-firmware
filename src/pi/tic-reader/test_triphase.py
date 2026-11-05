@@ -218,14 +218,15 @@ print("── inspection : /live multiplie bien par phases ───────
 # ⚠️ COMMENTAIRES RETIRÉS AVANT DE CHERCHER. La prose qui explique la règle cite
 #    `isousc * 230 * phases` et suffirait à faire passer ce contrôle sur un code
 #    qui ne l'applique plus. On lit le CODE, pas ce qu'il raconte.
+# ⓘ La forme de /live vit dans store/live.py depuis 0.16.0 (partagée avec ben-mqtt-ha).
 src = pathlib.Path(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                "..", "store", "local_api.py")).read_text()
+                                "..", "store", "live.py")).read_text()
 sans_commentaires = []
 for tok in tokenize.generate_tokens(io.StringIO(src).readline):
     if tok.type not in (tokenize.COMMENT, tokenize.STRING):
         sans_commentaires.append(tok.string)
 code = " ".join(sans_commentaires)
-verifie("le CODE de local_api contient `isousc * 230 * phases`",
+verifie("le CODE de /live (live.py) contient `isousc * 230 * phases`",
         "isousc * 230 * phases" in code, True)
 verifie("⚖️ et plus l'ancien `isousc * 230 if`",
         "isousc * 230 if isousc" in code, False)

@@ -18,6 +18,25 @@ Deux pistes indépendantes :
 
 ## Pi (récepteur / façade radio)
 
+### [0.16.0] — à publier
+
+**Home Assistant en push, par MQTT** — nouveau service **opt-in** `ben-mqtt-ha`. Guide :
+[`docs/home-assistant.md`](./docs/home-assistant.md).
+
+- Le boîtier publie son état sur le broker MQTT de Home Assistant au format **MQTT
+  Discovery** : HA crée seul les entités (puissance, intensité, tarif, couleur Tempo, un
+  index d'énergie par registre pour le tableau Énergie, injection, événements compteur,
+  signal LoRa, luminosité LED réglable). **Aucun composant à installer côté HA.**
+- **Push, pas de sondage** : les lecteurs publient `ben/local/stored` sur le bus local après
+  chaque commit (`store/bus.py`, fire-and-forget — ne peut coûter aucune mesure) ; le pont
+  relit alors la base en lecture seule.
+- **Opt-in** : l'unité est posée partout mais sautée tant que
+  `/etc/ben-firmware/mqtt-ha.json` n'existe pas. Un boîtier sans HA ne voit aucune différence.
+- La forme de `/live` sort de `local_api.py` vers `store/live.py`, partagée par l'API et le
+  pont — **`/live` rend exactement la même chose**.
+- 🔒 L'ADCO n'est jamais publié.
+- Aucune migration de schéma.
+
 ### [0.15.0] — 2026-10-17
 
 **Le récepteur consomme le bit TRIPHASÉ** — la moitié manquante de

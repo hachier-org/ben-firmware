@@ -29,6 +29,7 @@ ben-firmware/
       ben-telemetry/         # Decodes & stores frames, no radio (lora-tic-receiver capability)
       tic-reader/            # Direct TIC reader (pi0-wired only)
       publisher/             # Cloud publisher (all models)
+      ben-mqtt-ha/           # Opt-in push to Home Assistant over MQTT (all models)
       updater/
         check_update.py      # Permanent OTA agent
         update_lib.py        # Compatibility parsing, version comparison
@@ -377,6 +378,7 @@ One service per agent. Only the services relevant to the device model are enable
 | `ben-radio.service` | `lora-tic-receiver` cap | no | Sole owner of the SX127x: RX/TX + LED |
 | `ben-telemetry.service` | `lora-tic-receiver` cap | no | Decodes and stores frames (no radio) |
 | `ben-publisher.service` | all | yes | Publishes data to cloud API |
+| `ben-mqtt-ha.service` | all, **opt-in** | yes | Pushes state to Home Assistant over MQTT; skipped unless `/etc/ben-firmware/mqtt-ha.json` exists — see §15 |
 | `ben-update.service` | all | yes | One-shot: runs `check_update.py` |
 | `ben-update.timer` | all | yes | Triggers `ben-update.service` once a day (randomized) |
 
@@ -725,7 +727,23 @@ The PDL is carried in the `ADCO` label (mode historique) or `ADSC` label (mode s
 
 ---
 
-## 15. What is NOT in this repo
+## 15. Home Assistant (MQTT push)
+
+`ben-mqtt-ha` publishes the box state to Home Assistant's MQTT broker using **MQTT Discovery**,
+so HA's built-in MQTT integration creates the entities — nothing to install on the HA side.
+Full guide (setup, entities, topics, Energy dashboard): [docs/home-assistant.md](docs/home-assistant.md).
+
+- **Push, not polling.** Readers publish `ben/local/stored` on the local bus after each commit
+  (`store/bus.py`, fire-and-forget: it can never cost a measurement). The bridge then re-reads
+  the DB read-only and publishes. Latency = reader write cadence (~15 s wired, ~60 s LoRa).
+- **One source for the `/live` shape**: `store/live.py`, used by both `local_api.py` and the bridge.
+- **Opt-in**: the unit is enabled everywhere but gated by `ConditionPathExists`.
+- **The ADCO is never published.** Entities are keyed `<deviceId>_pdl<n>`.
+- The local mosquitto stays bound to `127.0.0.1`; the bridge is a *client* of the remote broker.
+
+---
+
+## 16. What is NOT in this repo
 
 | Component | Location |
 |---|---|

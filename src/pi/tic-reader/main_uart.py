@@ -64,6 +64,7 @@ import serial
 # Module store partagé (src/pi/store/db.py)
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "store"))
+import bus  # noqa: E402
 import db  # noqa: E402
 import settings  # noqa: E402
 
@@ -1327,6 +1328,8 @@ if __name__ == "__main__":
         measurements_db = None
         log.error(f"Store SQLite indisponible ({e}) — on continue sans stockage")
     last_prune = time.time()
+    # Signal « stocké » sur le bus local (cf. store/bus.py) — None si paho absent.
+    bus_client = bus.local_client("ben-tic-reader")
 
     # --- Batch d'écriture (volet B) ---------------------------------------------
     # La lecture au fil de l'eau densifie les trames (~7×). Pour ne pas faire un fsync
@@ -1371,6 +1374,7 @@ if __name__ == "__main__":
         try:
             n = db.record_measurements_batch(measurements_db, batch)
             log.debug(f"store: batch flush {n} mesures")
+            bus.publish_stored(bus_client, PDL_INDEX, batch[-1][2])
         except Exception as e:
             log.warning(f"store: flush batch échoué ({len(batch)} pts perdus): {e}")
         finally:
